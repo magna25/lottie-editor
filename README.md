@@ -10,7 +10,7 @@ The tool supports:
   * up to 10 levels of undo/redo history
   * keyboard shortcuts for play/pause, seek forward/backward
   * Drag and drop files
-  * loading lottie file from url (get a link from lottiefiles and provide the source url. ex /?src="/?src=https://assets8.lottiefiles.com/packages/lf20_nz20vA.json")
+  * loading lottie file from url (get a link from lottiefiles and provide the source url. ex /?src="animation_url")
   
  The whole app runs on the client and any uploaded animation isn't saved on a server.
  
