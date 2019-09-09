@@ -1,5 +1,5 @@
 # lottie-editor
-Edit lottie animation colors 
+Edit lottie animation colors https://magna25.github.io/lottie-editor/
 
 A simple web tool that parses a lottie json file and allows editing the layer colors.
 The tool supports:
