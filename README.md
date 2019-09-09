@@ -31,8 +31,11 @@ The tool supports:
 
 some gradient colors don't change
  
- ### Improvements
+ ### todo
+ handle layers embeded inside another layers
+ 
  refactor code
  
- handle layers embeded inside another layers
+
+ 
  
