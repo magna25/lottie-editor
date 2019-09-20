@@ -1,14 +1,14 @@
 {
   "files": {
     "main.css": "/lottie-editor/static/css/main.59e2ae3d.chunk.css",
-    "main.js": "/lottie-editor/static/js/main.c1a0a5e4.chunk.js",
-    "main.js.map": "/lottie-editor/static/js/main.c1a0a5e4.chunk.js.map",
+    "main.js": "/lottie-editor/static/js/main.cda9517d.chunk.js",
+    "main.js.map": "/lottie-editor/static/js/main.cda9517d.chunk.js.map",
     "runtime~main.js": "/lottie-editor/static/js/runtime~main.0f5720fa.js",
     "runtime~main.js.map": "/lottie-editor/static/js/runtime~main.0f5720fa.js.map",
-    "static/js/2.f874848a.chunk.js": "/lottie-editor/static/js/2.f874848a.chunk.js",
-    "static/js/2.f874848a.chunk.js.map": "/lottie-editor/static/js/2.f874848a.chunk.js.map",
+    "static/js/2.4267d5c4.chunk.js": "/lottie-editor/static/js/2.4267d5c4.chunk.js",
+    "static/js/2.4267d5c4.chunk.js.map": "/lottie-editor/static/js/2.4267d5c4.chunk.js.map",
     "index.html": "/lottie-editor/index.html",
-    "precache-manifest.a64e20465cc080cc7c19c4e9cf208e7f.js": "/lottie-editor/precache-manifest.a64e20465cc080cc7c19c4e9cf208e7f.js",
+    "precache-manifest.a8616dc79d496f0da5ed7ed33159a1a8.js": "/lottie-editor/precache-manifest.a8616dc79d496f0da5ed7ed33159a1a8.js",
     "service-worker.js": "/lottie-editor/service-worker.js",
     "static/css/main.59e2ae3d.chunk.css.map": "/lottie-editor/static/css/main.59e2ae3d.chunk.css.map"
   }
