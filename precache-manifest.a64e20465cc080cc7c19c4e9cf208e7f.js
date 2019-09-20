@@ -1,18 +1,18 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "96bbccb4fb2ddf4b2c6308925f7091a6",
+    "revision": "f0b48e33e326e9125ccc1f07a5b5848e",
     "url": "/lottie-editor/index.html"
   },
   {
-    "revision": "5c0d1276d2bae4ea4742",
-    "url": "/lottie-editor/static/css/main.c2a06c3d.chunk.css"
+    "revision": "7712e6b4e85ec77767df",
+    "url": "/lottie-editor/static/css/main.59e2ae3d.chunk.css"
   },
   {
     "revision": "bfc5a7cfc9d1b224b2e1",
     "url": "/lottie-editor/static/js/2.f874848a.chunk.js"
   },
   {
-    "revision": "5c0d1276d2bae4ea4742",
+    "revision": "7712e6b4e85ec77767df",
     "url": "/lottie-editor/static/js/main.c1a0a5e4.chunk.js"
   },
   {
