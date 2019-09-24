@@ -9,13 +9,10 @@ import { Scrollbars } from 'react-custom-scrollbars';
 import Slider from 'react-input-slider'
 import FileDrop from 'react-file-drop'
 import {saveAs} from 'file-saver'
-import ReactGA from 'react-ga';
 import {inject, observer} from 'mobx-react'
-import {toJS, computed} from 'mobx'
+import {toJS} from 'mobx'
 
-//google analytics
-ReactGA.initialize('UA-139548848-2');
-ReactGA.pageview(window.location.pathname + window.location.search);
+
 
 const sketchPickerStyles = {
   default: {
