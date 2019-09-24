@@ -9,6 +9,13 @@ import { Scrollbars } from 'react-custom-scrollbars';
 import Slider from 'react-input-slider'
 import FileDrop from 'react-file-drop'
 import {saveAs} from 'file-saver'
+import ReactGA from 'react-ga';
+import {inject, observer} from 'mobx-react'
+import {toJS, computed} from 'mobx'
+
+//google analytics
+ReactGA.initialize('UA-139548848-2');
+ReactGA.pageview(window.location.pathname + window.location.search);
 
 const sketchPickerStyles = {
   default: {
@@ -26,7 +33,7 @@ let redoStack = []
 let initAnimation = null
 let initState = {}
 
-class LottieEditor extends React.Component {
+class Editor extends React.Component {
   state = {
     data: null,
     parsedColors:null,
@@ -55,45 +62,48 @@ class LottieEditor extends React.Component {
     currentView:0,//0:show file drop,1: show loading,2:render animation
     fetchError:false
   }
+  
   componentDidMount(){
-    initState = this.state //for redo/undo and clear all 
+    initState = JSON.parse(JSON.stringify(this.state)) //for redo/undo and clear all 
     let search = window.location.search;
     let params = new URLSearchParams(search);
     let url = params.get('src')
-
-    if(url){
-      this.setState({currentView:1})
-      fetch(url)
-      .then(async resp => {
-        //lottiefiles website returns plain text so get that first and parse
-        let body = await resp.text() 
-        try{
-          const res = JSON.parse(body)
-          //check some properties to see if is a valid lottie json file..
-          //not meant to be foolproof -- just to catch mistakes
-          if('v' in res && 'ip' in res && 'op'){
-            this.loadNewAnimation(res)
+    let demo = false
+    if(!url){
+        demo = true
+        url = 'https://assets5.lottiefiles.com/packages/lf20_nz20vA.json'
+    }
+   
+    this.setState({currentView:1})
+    fetch(url)
+    .then(async resp => {
+      //lottiefiles website returns plain text so get that first and parse
+      let body = await resp.text() 
+      try{
+        
+        const res = JSON.parse(body)
+        
+        //check some properties to see if is a valid lottie json file..
+        //not meant to be foolproof -- just to catch mistakes
+        if('v' in res && 'ip' in res && 'op'){
+          if(demo){
+            this.initDemo(res)
           }
           else{
-            this.setState({currentView:0,fetchError:true})
+            this.loadNewAnimation(res)
           }
-          
         }
-        catch(err){
-          this.setState({fetchError:true,currentView:0})
+        else{
+          this.setState({currentView:0,fetchError:true})
         }
-      })
-      .catch(err =>  this.setState({fetchError:true,currentView:0}))
-    }
-    
-    this.setState({
-      data:require('./assets/animations/watermelon.json') //demo animation
-      },() => {
-       //ugly but for deep copy of the animation data only.. later to clear all the changes
-       //most animation files are less than 1mb so performance shouldn't suffer
-        initAnimation = JSON.parse(JSON.stringify(this.state.data))
+        
       }
-      )
+      catch(err){
+        this.setState({fetchError:true,currentView:0})
+      }
+    })
+    .catch(err =>  this.setState({fetchError:true,currentView:0}))
+   
     document.addEventListener('mousedown', this.hideBackgroundColorPicker)
     document.addEventListener("keydown", this.keyboardControls, false)
   }
@@ -102,7 +112,7 @@ class LottieEditor extends React.Component {
     document.removeEventListener('mousedown', this.hideBackgroundColorPicker);
   }
   setColors = () => {
-    const parsedColors = parseColors(this.state.data,true)
+    const parsedColors = parseColors(toJS(this.props.Store.json),true)
     this.setState({parsedColors: parsedColors})
   }
 
@@ -114,9 +124,7 @@ class LottieEditor extends React.Component {
       this.setState({current_layer:id,layer_open:true})
     } 
   }
-  getPrevState = () =>{ //json stringify for deep copy of the animation data --needed for undo/redo
-    return {...this.state,...{data:JSON.parse(JSON.stringify(this.state.data))}}
-  }
+
   changeColor = (color,event) => {
     if(!this.state.activeGroupId) return
     const pickedColor = [color.rgb.r,color.rgb.g,color.rgb.b,1]
@@ -127,7 +135,7 @@ class LottieEditor extends React.Component {
       pickedColor:pickedColor
     }
     //undo/redo
-    const oldStateData = this.getPrevState()
+    const oldStateData = [this.state,toJS(this.props.Store.json)]
     if(undoStack.length < 10){
       undoStack.push(oldStateData)
     }
@@ -144,23 +152,24 @@ class LottieEditor extends React.Component {
 
       if(this.state.isGradient){
         colorProps.gradientStartIndex = this.state.gradientIndex
-        newData = assignNewGradientColor(this.state.data,colorProps)
+        newData = assignNewGradientColor(toJS(this.props.Store.json),colorProps)
       }
       else{
-        newData = assignNewSolidColor(this.state.data,colorProps)
+        newData = assignNewSolidColor(toJS(this.props.Store.json),colorProps)
       }
     }
     else{
         colorProps.type = null
         if(this.state.isGradient){
           colorProps.gradientStartIndex = this.state.gradientIndex
-          newData = assignNewGradientColor(this.state.data,colorProps)
+          newData = assignNewGradientColor(toJS(this.props.Store.json),colorProps)
         }
         else{
-          newData = assignNewSolidColor(this.state.data,colorProps)
+          newData = assignNewSolidColor(toJS(this.props.Store.json),colorProps)
         }
     }
     
+    this.props.Store.setJson(newData.animation)
     this.setState({
       parsedColors:newData.colors,
       activeGroupId:newData.key,
@@ -264,11 +273,12 @@ class LottieEditor extends React.Component {
   }
   clearAllChanges = () => {
     if(undoStack.length == 0) return
-    const cleared = {...initState,...{data:initAnimation,currentView:2}}
+    
+    this.props.Store.setJson(initAnimation)
     redoStack = []
     undoStack = []
     this.setState(
-      cleared
+      {...initState,...{currentView:2}}
       ,()=>{
         this.setColors()
         this.lottieRender()
@@ -279,10 +289,11 @@ class LottieEditor extends React.Component {
     if(undoStack.length == 0) return
     const prevAnimation = undoStack.pop()
     redoStack.push(prevAnimation)
-    redoStack.push(this.getPrevState())
+    redoStack.push([this.state,toJS(this.props.Store.json)])
     
+    this.props.Store.setJson(prevAnimation[1])
     this.setState(
-      {...prevAnimation,...{animationPreviewBackgroundColor:this.state.animationPreviewBackgroundColor}}
+      {...prevAnimation[0],...{animationPreviewBackgroundColor:this.state.animationPreviewBackgroundColor}}
       ,()=>{
         this.setColors()
         this.lottieRender()
@@ -295,8 +306,9 @@ class LottieEditor extends React.Component {
     let current = redoStack.pop()
     let undo = redoStack.pop()
     undoStack.push(undo)
+    this.props.Store.setJson(current[1])
     this.setState(
-      {...current,...{animationPreviewBackgroundColor:this.state.animationPreviewBackgroundColor}},
+      {...current[0],...{animationPreviewBackgroundColor:this.state.animationPreviewBackgroundColor}},
       ()=>{
         this.setColors()
         this.lottieRender()
@@ -319,18 +331,25 @@ class LottieEditor extends React.Component {
   setWrapperRef = (node) => {
     this.wrapperRef = node
   }
+  initDemo = (animation) =>{
+    initAnimation = animation
+    this.props.Store.setJson(animation)
+    this.setState({currentView:0})
+  }
   
   loadNewAnimation = (animation) => {
     initAnimation = animation
-    let x = {...initState ,...{data:animation}}
-    this.setState({...x,...{currentView:2,fetchError:false}},
-      () => {
+    this.props.Store.setJson(animation)
+    this.setState(
+      {currentView:2,fetchError:false},
+      ()=>{
         undoStack = []
         redoStack = []
         this.setColors()
         this.lottieRender()
       }
-    )
+      )
+    
   }
   parseAndLoadNewAnimation = (e) => {
     const newAnimation = JSON.parse(e.target.result)
@@ -345,8 +364,9 @@ class LottieEditor extends React.Component {
 
   downloadFile = ()=>{
     if(this.state.currentView != 2) return  
-    const blob = new Blob([JSON.stringify(this.state.data)], {type: "application/json"});
-    saveAs(blob,this.state.data.nm)
+    const data = toJS(this.props.Store.json)
+    const blob = new Blob([JSON.stringify(data)])
+    saveAs(blob,data.nm+'.json')
   }
   switchEditMode = () => {
     this.setState(
@@ -358,6 +378,7 @@ class LottieEditor extends React.Component {
     )
    
   }
+  
 //----------renders----------------------------
 //---------------------------------------
   backgroundColorPicker(){
@@ -518,7 +539,8 @@ class LottieEditor extends React.Component {
     return (
       <div style={{background:'rgba(0,0,0,.10)'}}>
       <ul>
-        <li 
+        <li
+          key={shapeId}
         onClick={() => this.setActiveColorSolids(
           {
             rootItemName:rootItemName,
@@ -611,7 +633,7 @@ class LottieEditor extends React.Component {
       renderer: "svg",
       loop: true,
       autoplay:true,
-      animationData: this.state.data,
+      animationData: toJS(this.props.Store.json),
     });
     if(this.state.paused) animation.goToAndStop(this.state.currentFrameTime,true)
     animation.addEventListener('enterFrame',this.updateCurrentFrame)
@@ -634,7 +656,7 @@ class LottieEditor extends React.Component {
     return (
       <div className="drop-files-wrapper">
           <p>Drag and drop lottie files here or </p><br/><br/>
-          <div onClick={() => this.switchEditMode()} class="button">
+          <div onClick={() => this.switchEditMode()} className="button">
           Edit demo
          
           <span><MdEdit/></span>
@@ -651,6 +673,7 @@ class LottieEditor extends React.Component {
   }
   render() {
   return (
+    
     <div className="main">
       <div className="sidebarWrapper">
       <div className="colorPicker">
@@ -666,7 +689,7 @@ class LottieEditor extends React.Component {
 
       </div>
       <div className="previewWrapper">
-        <a target="_blank" href="https://github.com/magna25/lottie-editor" id="github-link"> <p><FaGithub/></p> <p>v1.0.0</p></a>
+        <a target="_blank" href="https://github.com/magna25/lottie-editor" id="github-link"> <p><FaGithub/></p> <p>v1.0.1</p></a>
 
         <div className="previewContainer"  style={{background:this.state.animationPreviewBackgroundColor}}>
             <FileDrop onDrop={this.handleFileDrop}>
@@ -709,8 +732,10 @@ class LottieEditor extends React.Component {
         
       </div>
     </div>
+    
   );
   }
 }
 
+const LottieEditor = inject('Store')(observer(Editor))
 export default LottieEditor;
