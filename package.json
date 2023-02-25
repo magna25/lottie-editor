@@ -16,7 +16,7 @@
     "react-ga": "^2.6.0",
     "react-icons": "^3.7.0",
     "react-input-slider": "^5.1.2",
-    "react-scripts": "3.1.1",
+    "react-scripts": "5.0.1",
     "xxhashjs": "^0.2.2"
   },
   "scripts": {
